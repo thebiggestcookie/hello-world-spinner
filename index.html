@@ -10,12 +10,15 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             background-color: #f0f8ff;
             margin: 0;
+            padding: 20px;
         }
         .container {
             text-align: center;
+            max-width: 800px;
+            width: 100%;
         }
         h1 {
             color: #4a6fa5;
@@ -26,6 +29,7 @@
             font-size: 100px;
             display: inline-block;
             animation: spin 3s linear infinite;
+            margin-bottom: 20px;
         }
         @keyframes spin {
             0% { transform: rotate(0deg); }
@@ -52,19 +56,75 @@
         button:hover {
             background-color: #3a5a8a;
         }
+        .message-section {
+            margin-top: 40px;
+            text-align: left;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .message-form {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        .message-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        .message-list {
+            list-style: none;
+            padding: 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .message-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .message-content {
+            margin: 0;
+            font-size: 16px;
+        }
+        .message-time {
+            font-size: 12px;
+            color: #999;
+            margin-top: 4px;
+        }
+        .status-indicator {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Hello World!</h1>
         <div class="smiley">😊</div>
-        <p style="margin-top: 20px; color: #666;">Hosted on Vercel</p>
+        <p style="margin-top: 20px; color: #666;">Hosted on Vercel with Supabase</p>
         
         <button onclick="fetchApiInfo()">Check API</button>
         <div id="api-response" class="api-info" style="display: none;"></div>
+
+        <div class="message-section">
+            <h2>Messages</h2>
+            <div class="message-form">
+                <input type="text" id="message-input" class="message-input" placeholder="Type a message...">
+                <button onclick="addMessage()">Send</button>
+            </div>
+            <div class="status-indicator" id="status">Loading messages...</div>
+            <ul class="message-list" id="message-list">
+                <!-- Messages will be loaded here -->
+            </ul>
+        </div>
     </div>
 
     <script>
+        // Fetch basic API info
         function fetchApiInfo() {
             fetch('/api/info')
                 .then(response => response.json())
@@ -85,6 +145,83 @@
                     apiResponse.style.display = 'block';
                 });
         }
+
+        // Load messages from Supabase
+        function loadMessages() {
+            document.getElementById('status').innerText = 'Loading messages...';
+            
+            fetch('/api/messages')
+                .then(response => response.json())
+                .then(data => {
+                    const messageList = document.getElementById('message-list');
+                    messageList.innerHTML = '';
+                    
+                    if (data.length === 0) {
+                        document.getElementById('status').innerText = 'No messages yet. Be the first to write something!';
+                        return;
+                    }
+                    
+                    data.forEach(message => {
+                        const li = document.createElement('li');
+                        li.className = 'message-item';
+                        
+                        const content = document.createElement('p');
+                        content.className = 'message-content';
+                        content.textContent = message.content;
+                        
+                        const time = document.createElement('p');
+                        time.className = 'message-time';
+                        time.textContent = new Date(message.created_at).toLocaleString();
+                        
+                        li.appendChild(content);
+                        li.appendChild(time);
+                        messageList.appendChild(li);
+                    });
+                    
+                    document.getElementById('status').innerText = `${data.length} message(s) loaded`;
+                })
+                .catch(error => {
+                    console.error('Error loading messages:', error);
+                    document.getElementById('status').innerText = 'Error loading messages. Please try again.';
+                });
+        }
+        
+        // Add a new message
+        function addMessage() {
+            const input = document.getElementById('message-input');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            document.getElementById('status').innerText = 'Sending message...';
+            
+            fetch('/api/messages', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ message }),
+            })
+                .then(response => response.json())
+                .then(data => {
+                    input.value = '';
+                    loadMessages(); // Reload messages after adding a new one
+                })
+                .catch(error => {
+                    console.error('Error adding message:', error);
+                    document.getElementById('status').innerText = 'Error sending message. Please try again.';
+                });
+        }
+        
+        // Handle Enter key press in the input
+        document.getElementById('message-input').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                addMessage();
+            }
+        });
+        
+        // Load messages on page load
+        document.addEventListener('DOMContentLoaded', loadMessages);
     </script>
 </body>
 </html>
