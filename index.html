@@ -31,13 +31,60 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        .api-info {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: rgba(255, 255, 255, 0.7);
+            border-radius: 8px;
+            display: inline-block;
+            color: #555;
+        }
+        button {
+            margin-top: 15px;
+            padding: 8px 16px;
+            background-color: #4a6fa5;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #3a5a8a;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Hello World!</h1>
         <div class="smiley">😊</div>
-        <p style="margin-top: 20px; color: #666;">Hosted on GitHub Pages</p>
+        <p style="margin-top: 20px; color: #666;">Hosted on Vercel</p>
+        
+        <button onclick="fetchApiInfo()">Check API</button>
+        <div id="api-response" class="api-info" style="display: none;"></div>
     </div>
+
+    <script>
+        function fetchApiInfo() {
+            fetch('/api/info')
+                .then(response => response.json())
+                .then(data => {
+                    const apiResponse = document.getElementById('api-response');
+                    apiResponse.innerHTML = `
+                        <h3>API Response:</h3>
+                        <p>App: ${data.app}</p>
+                        <p>Version: ${data.version}</p>
+                        <p>Environment: ${data.environment}</p>
+                        <p>Time: ${new Date(data.timestamp).toLocaleString()}</p>
+                    `;
+                    apiResponse.style.display = 'block';
+                })
+                .catch(error => {
+                    const apiResponse = document.getElementById('api-response');
+                    apiResponse.innerHTML = `<p>Error fetching API: ${error.message}</p>`;
+                    apiResponse.style.display = 'block';
+                });
+        }
+    </script>
 </body>
 </html>
