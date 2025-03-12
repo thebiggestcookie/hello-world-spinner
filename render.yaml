@@ -1,14 +1,13 @@
+# Blueprint for deploying to Render
 services:
   - type: web
     name: hello-world-spinner
-    runtime: node
-    repo: https://github.com/thebiggestcookie/hello-world-spinner
-    branch: main
+    env: node
     buildCommand: npm install
     startCommand: npm start
+    repo: https://github.com/thebiggestcookie/hello-world-spinner
+    branch: main
+    plan: free
     envVars:
       - key: NODE_ENV
         value: production
-    autoDeploy: true
-    plan: free
-    region: oregon
